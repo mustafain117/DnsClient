@@ -63,4 +63,13 @@ public class DnsPacket {
 		
 		return header.array();
 	}
+	
+	private byte[] getQuestion(String domainName) {
+		
+		
+		
+		return null;
+	}
+	
+	
 }
