@@ -6,6 +6,7 @@ public class Main {
 			dnsClient.request();
 		} catch (Exception e) {
 			String error = e.getMessage();
+			System.out.println(error);
 		}
 	}
 }

@@ -16,14 +16,21 @@ public class DnsPacket {
 	}
 	
 	public byte[] createRequestPacket() {
-		//create byteBuffer
 		
 		//create header
-		
+		byte[] header = packetHeader();
 		//create question
+		byte[] question = getQuestion(this.domainName, this.queryType);
 		
+		int packetLength = header.length + question.length;
 		
-		return null;
+		ByteBuffer packet = ByteBuffer.allocate(packetLength);
+		
+		packet.put(header);
+		packet.put(question);
+		
+		return packet.array();
+		
 	}
 	private byte[] packetHeader() {
 		
@@ -64,11 +71,52 @@ public class DnsPacket {
 		return header.array();
 	}
 	
-	private byte[] getQuestion(String domainName) {
+	public byte[] getQuestion(String domainName, String queryType) {
+
+		//calculate bytes needed for QNAME
+		int nbBytes = 0;
 		
+		String[] tokens = domainName.split("\\.");
+		//1 byte per label
+		nbBytes = tokens.length;
+		for(int i = 0 ; i < tokens.length; i++) {
+			// 1 byte for each character in the domain name
+			nbBytes += tokens[i].length();
+		}
 		
+		//buffer with size of QNAME + 5 bytes for End of name,  QTYPE and QCLASS
+		ByteBuffer question = ByteBuffer.allocate(nbBytes + 5);
 		
-		return null;
+		//add QNAME to buffer
+		for(int i = 0 ; i < tokens.length ; i++) {
+			int label = tokens[i].length();
+			question.put((byte)label);
+			for(int j = 0 ; j < tokens[i].length() ; j++) {
+				question.put((byte)tokens[i].charAt(j));
+			}
+		}		
+		//end of Qname
+		question.put((byte)0x00);
+		
+		byte[] QTYPE = new byte[2];
+		// A  = 1 , NS = 2, MX = 15
+		if(queryType.equals("A")) {
+			QTYPE[0] = (byte)(0x00);
+			QTYPE[1] = (byte)(0x01);
+		}else if(queryType.equals("NS")) {
+			QTYPE[0] = (byte)(0x00);
+			QTYPE[1] = (byte)(0x02);
+		}else {
+			QTYPE[0] = (byte)(0x0e);
+			QTYPE[1] = (byte)(0x0f);
+		}
+		//add QTYPE to buffer
+		question.put(QTYPE);
+		
+		//add QClass to buffer, default at 0x0001
+		question.put((byte)0x0001);
+		
+		return question.array();
 	}
 	
 	

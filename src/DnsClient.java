@@ -41,7 +41,7 @@ public class DnsClient {
 				this.queryType = arg;
 			}else {
 				address = arg.substring(1);
-				String ipAddress[] = address.split(".");
+				String ipAddress[] = address.split("\\.");
 				for(int i = 0 ; i < ipAddress.length; i++) {
 					int address = Integer.parseInt(ipAddress[i]);
 					if(address < 0 || address > 255) {
