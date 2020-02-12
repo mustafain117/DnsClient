@@ -1,3 +1,4 @@
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -13,6 +14,8 @@ public class DnsClient {
 	private byte[] server = new byte[4];
 	String address;
 	private String domainName;
+	private DatagramSocket socket;
+	private InetAddress inetAddr;
 	
 	public DnsClient(String args[]) throws Exception {
 		try {
@@ -65,16 +68,20 @@ public class DnsClient {
 			System.out.println("ERROR\tMaximum number of retries " + maxRetries+ " exceeded");
             return;
 		}
-		
 		try {	
-			DatagramSocket socket = new DatagramSocket();
-			InetAddress addr = InetAddress.getByAddress(server);
+			socket = new DatagramSocket();
+			inetAddr = InetAddress.getByAddress(server);
 		} catch (SocketException e) {
 			System.out.println("ERROR\tCould not create socket");
+			return;
 		} catch (UnknownHostException e) {
 			System.out.println("ERROR\tUnknown host");
+			return;
 		}
-		//create packet
 		
+		//create packet
+		DnsPacket dnsQuery = new DnsPacket(this.domainName, this.queryType);
+		byte[] dnsReq = dnsQuery.createRequestPacket();
+		DatagramPacket packet = new DatagramPacket(dnsReq, dnsReq.length, inetAddr, this.port);
 	}
 }
