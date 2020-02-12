@@ -66,16 +66,15 @@ public class DnsClient {
             return;
 		}
 		
-		try {
-			
+		try {	
 			DatagramSocket socket = new DatagramSocket();
 			InetAddress addr = InetAddress.getByAddress(server);
-			
-			
 		} catch (SocketException e) {
 			System.out.println("ERROR\tCould not create socket");
 		} catch (UnknownHostException e) {
 			System.out.println("ERROR\tUnknown host");
 		}
+		//create packet
+		
 	}
 }
