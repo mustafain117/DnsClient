@@ -15,6 +15,10 @@ public class DnsPacket {
 		this.queryType = queryType;
 	}
 	
+	public DnsPacket() {
+
+	}
+	
 	public byte[] createRequestPacket() {
 		
 		//create header
@@ -68,6 +72,9 @@ public class DnsPacket {
 		header.put((byte)0x00);
 		header.put((byte)0x01);
 		
+	//MAYBE NEED TO ADD ANCOUNT, NSCOUNT and ARCOUNT bytes as well.
+	//16 bits = 2 bytes for each.
+		
 		return header.array();
 	}
 	
@@ -112,11 +119,18 @@ public class DnsPacket {
 		}
 		//add QTYPE to buffer
 		question.put(QTYPE);
-		
-		//add QClass to buffer, default at 0x0001
+
 		question.put((byte)0x0001);
 		
 		return question.array();
+	}
+	
+	public void parseResponsePacket(byte[] responseData) {
+		
+		
+		
+		
+		
 	}
 	
 	

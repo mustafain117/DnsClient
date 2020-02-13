@@ -1,9 +1,18 @@
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.*;
+
+
+//added
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+
 
 public class DnsClient {
 	
@@ -82,6 +91,43 @@ public class DnsClient {
 		//create packet
 		DnsPacket dnsQuery = new DnsPacket(this.domainName, this.queryType);
 		byte[] dnsReq = dnsQuery.createRequestPacket();
-		DatagramPacket packet = new DatagramPacket(dnsReq, dnsReq.length, inetAddr, this.port);
+		DatagramPacket sendPacket = new DatagramPacket(dnsReq, dnsReq.length, inetAddr, this.port);
+		
+		byte[] buf = new byte[1024];
+		DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
+		
+		try {
+			socket.send(sendPacket);
+			
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			
+			socket.receive(receivePacket);
+			//System.out.print(receivePacket.);
+			//System.out.print(sendPacket.getAddress());
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("\n\nReceived: " + receivePacket.getLength() + " bytes");
+
+        for (int i = 0; i < receivePacket.getLength(); i++) {
+            System.out.print(" 0x" + String.format("%x", buf[i]) + " " );
+        }
+        System.out.println("\n");
+        
+        System.out.println("The original packet has the following bytes: \n");
+        
+        for (int i = 0; i < sendPacket.getLength(); i++) {
+            System.out.print(" 0x" + String.format("%x", dnsReq[i]) + " " );
+        }
+		
 	}
 }
