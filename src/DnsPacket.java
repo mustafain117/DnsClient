@@ -137,7 +137,7 @@ public class DnsPacket {
 			ip[j] = responseData[j];
 		}
 		
-		System.out.println("ip :" + String.format("%x", ip));
+		//System.out.println("ip :" + String.format("%x", ip));
 		
 	}
 	
