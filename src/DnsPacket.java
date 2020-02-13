@@ -125,21 +125,6 @@ public class DnsPacket {
 		
 		return question.array();
 	}
-	
-	public static void parseResponsePacket(byte[] responseData) {
-		
-		//answer starts from 32nd bit, last 8 bytes are ip address
-		//int len = responseData.length;
-		
-		byte[] ip = new byte[4];
-		int j = 0;
-		for(int i = 31 ; i < 4 ; i++) {
-			ip[j] = responseData[j];
-		}
-		
-		//System.out.println("ip :" + String.format("%x", ip));
-		
-	}
-	
+
 	
 }

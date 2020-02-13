@@ -51,7 +51,7 @@ public class DnsClient {
 				this.maxRetries = Integer.parseInt(argsIterator.next());
 			}else if(arg.equals("-p")) {
 				this.port = Integer.parseInt(argsIterator.next());
-			}else if(arg.equals("-mx") || arg.equals("-nx")) {
+			}else if(arg.equals("-mx") || arg.equals("-ns")) {
 				this.queryType = arg;
 			}else {
 				address = arg.substring(1);
@@ -136,7 +136,7 @@ public class DnsClient {
 		
 		System.out.println("\n\nSent: " + sendPacket.getLength() + " bytes");
 		
-		response = new DnsResponse(buf);
+		response = new DnsResponse(buf, sendPacket.getLength());
 		if(response.getRcode() != 0) {
 			makeRequest(trialNumber+1);
 		}
@@ -144,6 +144,7 @@ public class DnsClient {
 		System.out.println("\n\nReceived: " + receivePacket.getLength() + " bytes after time: " + totTime);
 		
         System.out.print("\n");
-        DnsPacket.parseResponsePacket(buf);
+        
+        response.parseResponse();
 	}
 }
