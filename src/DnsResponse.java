@@ -12,6 +12,7 @@ public class DnsResponse {
 	private int classData;
 	private int TTL;
 	private int addressLength;
+	private int AA;
 
 	
 	public DnsResponse(byte[] buffer, int startIndex) {
@@ -19,29 +20,22 @@ public class DnsResponse {
 		this.buffer = buffer;
 	}
 	
-	public void parseResponse() {
-		
-		
-		
-		int startIndex = this.startIndex;
-		System.out.println("The startIndex is: " + startIndex);
+	public void parseResponse() {		
 		parseHeader();
 		parseAnswer();
-		
 	}
 	
 	private void parseHeader() {
 		
 		this.QR = ((this.buffer[2] & (0x80)) % 127);
 		
+		this.AA = (this.buffer[2] & (0x04));
+				
 		this.RCODE = ((this.buffer[3]) & (0x0f));
 
 		this.anCount = (this.buffer[6] & 0xff) + (this.buffer[7] & 0xff);
 		
 		this.arCount = (this.buffer[10] & 0xff) + (this.buffer[11] & 0xff);
-		
-		System.out.println(startIndex);
-		
 		
 	}
 	
@@ -65,15 +59,7 @@ public class DnsResponse {
 			}else {
 				ip = ip + addr[i];
 			}
-		}
-		
-//		for(int i = 0; i<this.addressLength; i++) {	
-//			System.out.println("THE ADDRESS IS: " + addr[i] );
-//		}
-		
-		System.out.println("The value of type is: " + this.ip);
-		
-		
+		}		
 	}
 
 	public int getRcode() {
@@ -81,9 +67,15 @@ public class DnsResponse {
 		return 0;
 	}
 	
-	private void DisplayResponse() {
+	public void DisplayResponse() {
+		String auth="";
 		System.out.println("**Answer Section (" + this.anCount+ " records)**");
-		System.out.println("IP\t"+this.ip+"\t[seconds can cache]\t"+"[auth | nonauth]");
+		if(this.AA == 0) {
+			auth ="nonauth";
+		}else {
+			auth ="auth";
+		}
+		System.out.println("IP\t"+this.ip+"\t"+this.TTL+"\t"+auth);
 		/*
 		 * CNAME <tab> [alias] <tab> [seconds can cache] <tab> [auth | nonauth]
 		 * MX <tab> [alias] <tab> [pref] <tab> [seconds can cache] <tab> [auth | nonauth]
@@ -92,7 +84,5 @@ public class DnsResponse {
 		System.out.println("**Additional Section ("+ this.arCount +" records)**");
 		
 	}
-	
-	//private
-	
+		
 }

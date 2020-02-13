@@ -123,28 +123,29 @@ public class DnsClient {
 		
 		double totTime = (receiveTime-sentTime)/1000.0;
 		
-		 for (int i = 0; i < receivePacket.getLength(); i++) {
-	            System.out.print(" 0x" + String.format("%02x", buf[i]) + " " );
-	        }
-	        System.out.println("\n");
-	        
-	        System.out.println("The original packet has the following bytes: \n");
-	        
-	        for (int i = 0; i < sendPacket.getLength(); i++) {
-	            System.out.print(" 0x" + String.format("%02x", dnsReq[i]) + " " );
-	        }
-		
-		System.out.println("\n\nSent: " + sendPacket.getLength() + " bytes");
-		
+//		 for (int i = 0; i < receivePacket.getLength(); i++) {
+//	            System.out.print(" 0x" + String.format("%02x", buf[i]) + " " );
+//	        }
+//	        System.out.println("\n");
+//	        
+//	        System.out.println("The original packet has the following bytes: \n");
+//	        
+//	        for (int i = 0; i < sendPacket.getLength(); i++) {
+//	            System.out.print(" 0x" + String.format("%02x", dnsReq[i]) + " " );
+//	        }
+//		
+//		System.out.println("\n\nSent: " + sendPacket.getLength() + " bytes");
+//		
 		response = new DnsResponse(buf, sendPacket.getLength());
 		if(response.getRcode() != 0) {
 			makeRequest(trialNumber+1);
 		}
 		
-		System.out.println("\n\nReceived: " + receivePacket.getLength() + " bytes after time: " + totTime);
-		
-        System.out.print("\n");
+		System.out.println("Responce received after time: " + totTime + " seconds ("+ trialNumber + " retries)" );
+//		
+//        System.out.print("\n");
         
         response.parseResponse();
+        response.DisplayResponse();
 	}
 }
