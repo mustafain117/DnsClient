@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.LocalTime;
 import java.util.*;
 
 
@@ -25,6 +26,7 @@ public class DnsClient {
 	private String domainName;
 	private DatagramSocket socket;
 	private InetAddress inetAddr;
+	private DnsResponse response;
 	
 	public DnsClient(String args[]) throws Exception {
 		try {
@@ -96,6 +98,8 @@ public class DnsClient {
 		byte[] buf = new byte[1024];
 		DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
 		
+		
+		long sentTime = System.currentTimeMillis();
 		try {
 			socket.send(sendPacket);
 			
@@ -115,19 +119,31 @@ public class DnsClient {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		long receiveTime = System.currentTimeMillis();
 		
-		System.out.println("\n\nReceived: " + receivePacket.getLength() + " bytes");
-
-        for (int i = 0; i < receivePacket.getLength(); i++) {
-            System.out.print(" 0x" + String.format("%x", buf[i]) + " " );
-        }
-        System.out.println("\n");
-        
-        System.out.println("The original packet has the following bytes: \n");
-        
-        for (int i = 0; i < sendPacket.getLength(); i++) {
-            System.out.print(" 0x" + String.format("%x", dnsReq[i]) + " " );
-        }
+		double totTime = (receiveTime-sentTime)/1000.0;
 		
+		 for (int i = 0; i < receivePacket.getLength(); i++) {
+	            System.out.print(" 0x" + String.format("%02x", buf[i]) + " " );
+	        }
+	        System.out.println("\n");
+	        
+	        System.out.println("The original packet has the following bytes: \n");
+	        
+	        for (int i = 0; i < sendPacket.getLength(); i++) {
+	            System.out.print(" 0x" + String.format("%02x", dnsReq[i]) + " " );
+	        }
+		
+		System.out.println("\n\nSent: " + sendPacket.getLength() + " bytes");
+		
+		response = new DnsResponse(buf);
+		if(response.getRcode() != 0) {
+			makeRequest(trialNumber+1);
+		}
+		
+		System.out.println("\n\nReceived: " + receivePacket.getLength() + " bytes after time: " + totTime);
+		
+        System.out.print("\n");
+        DnsPacket.parseResponsePacket(buf);
 	}
 }

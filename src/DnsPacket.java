@@ -114,22 +114,30 @@ public class DnsPacket {
 			QTYPE[0] = (byte)(0x00);
 			QTYPE[1] = (byte)(0x02);
 		}else {
-			QTYPE[0] = (byte)(0x0e);
+			QTYPE[0] = (byte)(0x00);
 			QTYPE[1] = (byte)(0x0f);
 		}
 		//add QTYPE to buffer
 		question.put(QTYPE);
-
-		question.put((byte)0x0001);
+		//QCLASS
+		question.put((byte)0x00);
+		question.put((byte)0x01);
 		
 		return question.array();
 	}
 	
-	public void parseResponsePacket(byte[] responseData) {
+	public static void parseResponsePacket(byte[] responseData) {
 		
+		//answer starts from 32nd bit, last 8 bytes are ip address
+		//int len = responseData.length;
 		
+		byte[] ip = new byte[4];
+		int j = 0;
+		for(int i = 31 ; i < 4 ; i++) {
+			ip[j] = responseData[j];
+		}
 		
-		
+		System.out.println("ip :" + String.format("%x", ip));
 		
 	}
 	
