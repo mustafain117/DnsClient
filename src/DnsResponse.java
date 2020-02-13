@@ -5,10 +5,13 @@ public class DnsResponse {
 	private int responeTime;
 	private int anCount;
 	private int arCount;
-	private String ip;
+	private String ip = "";
 	private byte[] buffer;
 	private int startIndex;
 	private int type ;
+	private int classData;
+	private int TTL;
+	private int addressLength;
 
 	
 	public DnsResponse(byte[] buffer, int startIndex) {
@@ -44,10 +47,31 @@ public class DnsResponse {
 	
 	private void parseAnswer() {
 		//this.type = this.buffer[startIndex + 2] & (0xff);
-		
+
 		this.type = (this.buffer[startIndex + 2] & 0xff) + (this.buffer[startIndex + 3] & 0xff);
 		
-		System.out.println("The value of type is: " + this.type);
+		this.classData = (this.buffer[startIndex + 4] & 0xff) + (this.buffer[startIndex + 5] & 0xff);
+		
+		this.TTL = (this.buffer[startIndex + 6] & 0xff) + (this.buffer[startIndex + 7] & 0xff) +
+				(this.buffer[startIndex + 8] & 0xff) + (this.buffer[startIndex + 9] & 0xff);
+		
+		this.addressLength = (this.buffer[startIndex + 10] & 0xff) + (this.buffer[startIndex + 11] & 0xff);
+		
+		int addr [] = new int [addressLength];
+		for(int i = 0; i<this.addressLength; i++) {	
+			addr[i] = (this.buffer[startIndex + 12 + i] & 0xff);
+			if(i<addressLength-1) {
+				ip = ip + addr[i] + ".";
+			}else {
+				ip = ip + addr[i];
+			}
+		}
+		
+//		for(int i = 0; i<this.addressLength; i++) {	
+//			System.out.println("THE ADDRESS IS: " + addr[i] );
+//		}
+		
+		System.out.println("The value of type is: " + this.ip);
 		
 		
 	}
