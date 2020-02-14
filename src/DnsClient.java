@@ -1,9 +1,20 @@
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.time.LocalTime;
 import java.util.*;
+
+
+//added
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+
 
 public class DnsClient {
 	
@@ -16,6 +27,7 @@ public class DnsClient {
 	private String domainName;
 	private DatagramSocket socket;
 	private InetAddress inetAddr;
+	private DnsResponse response;
 	
 	public DnsClient(String args[]) throws Exception {
 		try {
@@ -40,7 +52,7 @@ public class DnsClient {
 				this.maxRetries = Integer.parseInt(argsIterator.next());
 			}else if(arg.equals("-p")) {
 				this.port = Integer.parseInt(argsIterator.next());
-			}else if(arg.equals("-mx") || arg.equals("-nx")) {
+			}else if(arg.equals("-mx") || arg.equals("-ns")) {
 				this.queryType = arg;
 			}else {
 				address = arg.substring(1);
@@ -70,6 +82,7 @@ public class DnsClient {
 		}
 		try {	
 			socket = new DatagramSocket();
+			socket.setSoTimeout(this.timeout);
 			inetAddr = InetAddress.getByAddress(server);
 		} catch (SocketException e) {
 			System.out.println("ERROR\tCould not create socket");
@@ -82,6 +95,38 @@ public class DnsClient {
 		//create packet
 		DnsPacket dnsQuery = new DnsPacket(this.domainName, this.queryType);
 		byte[] dnsReq = dnsQuery.createRequestPacket();
-		DatagramPacket packet = new DatagramPacket(dnsReq, dnsReq.length, inetAddr, this.port);
+		DatagramPacket sendPacket = new DatagramPacket(dnsReq, dnsReq.length, inetAddr, this.port);
+		
+		byte[] buf = new byte[1024];
+		DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
+		
+		
+		long sentTime = System.currentTimeMillis();
+	
+		try {
+			socket.send(sendPacket);
+			socket.receive(receivePacket);
+		} catch (SocketTimeoutException e) {	
+			System.out.println("ERROR\tSocket Timeout");
+			makeRequest(++trialNumber);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	
+		long receiveTime = System.currentTimeMillis();
+		
+		double totTime = (receiveTime-sentTime)/1000.0;
+		
+	
+		response = new DnsResponse(buf, sendPacket.getLength());
+		
+		if(response.getRcode() != 0) {
+			makeRequest(++trialNumber);
+		}
+		
+		System.out.println("Responce received after time: " + totTime + " seconds ("+ (trialNumber-1) + " retries)" );
+
+        response.parseResponse();
+        response.DisplayResponse();
 	}
 }
