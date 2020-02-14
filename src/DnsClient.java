@@ -127,6 +127,6 @@ public class DnsClient {
 		System.out.println("Responce received after time: " + totTime + " seconds ("+ (trialNumber-1) + " retries)" );
 
         response.parseResponse();
-        response.DisplayResponse();
+       // response.DisplayResponse();
 	}
 }
