@@ -39,6 +39,7 @@ public class DnsClient {
 			throw new Exception("Inavlid Usage/Inputs");
 		}
 	}
+	
 	private void parseArguments(String[] args) throws Exception {
 		List<String> argList = new ArrayList<String>();
 		argList = Arrays.asList(args);
@@ -127,6 +128,6 @@ public class DnsClient {
 		System.out.println("Responce received after time: " + totTime + " seconds ("+ (trialNumber-1) + " retries)" );
 
         response.parseResponse();
-       // response.DisplayResponse();
+        response.DisplayResponse();
 	}
 }

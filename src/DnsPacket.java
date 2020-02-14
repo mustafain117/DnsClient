@@ -110,7 +110,7 @@ public class DnsPacket {
 		if(queryType.equals("A")) {
 			QTYPE[0] = (byte)(0x00);
 			QTYPE[1] = (byte)(0x01);
-		}else if(queryType.equals("NS")) {
+		}else if(queryType.equals("-ns")) {
 			QTYPE[0] = (byte)(0x00);
 			QTYPE[1] = (byte)(0x02);
 		}else {

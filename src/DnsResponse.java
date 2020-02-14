@@ -18,6 +18,8 @@ public class DnsResponse {
 	private int AA;
 	private String nameServer = "";
 	private DnsRecord[] ansRecords;
+	private DnsRecord[] additionalRecords;
+	private int nsCount;
 
 	
 	public DnsResponse(byte[] buffer, int startIndex) {
@@ -32,6 +34,18 @@ public class DnsResponse {
 		int index = this.startIndex;
 		for(int i = 0 ; i < this.anCount; i++) {
 			ansRecords[i] = parseAnswer(index);
+			index += ansRecords[i].getRecordLength();
+		}
+		if(this.arCount > 0) {
+			for(int i = 0 ; i < this.nsCount ; i++) {
+				index += parseAnswer(index).getRecordLength();
+			}
+		
+			additionalRecords = new DnsRecord[this.arCount];
+			for(int i = 0 ; i < this.anCount; i++) {
+				additionalRecords[i] = parseAnswer(index);
+				index += additionalRecords[i].getRecordLength();
+			}
 		}
 	}
 	
@@ -45,11 +59,13 @@ public class DnsResponse {
 
 		this.anCount = (this.buffer[6] & 0xff) + (this.buffer[7] & 0xff);
 		
+		this.nsCount = (this.buffer[8] & 0xff) + (this.buffer[9] & 0xff);
+		
 		this.arCount = (this.buffer[10] & 0xff) + (this.buffer[11] & 0xff);
 		
 	}
 	
-	private void parseAnswer(int index) {
+	private DnsRecord parseAnswer(int index) {
 		
 		int position = index;
 		RecordData data = getDomainFromIndex(position);
@@ -57,65 +73,100 @@ public class DnsResponse {
 		String domain = data.getDomain();
 	
 		
-		this.type = (this.buffer[startIndex + 2] & 0xff) + (this.buffer[startIndex + 3] & 0xff);
+		this.type = (this.buffer[position] & 0xff) + (this.buffer[position+1] & 0xff);
 		
+		position+=2;
 		
-		this.classData = (this.buffer[startIndex + 4] & 0xff) + (this.buffer[startIndex + 5] & 0xff);
+		this.classData = (this.buffer[position] & 0xff) + (this.buffer[position+1] & 0xff);
 		
 		if(this.classData != 1) {
 			throw new RuntimeException("ERROR\tUnexpected class code.");
 		}
 		
-		this.TTL = (this.buffer[startIndex + 6] & 0xff) + (this.buffer[startIndex + 7] & 0xff) +
-				(this.buffer[startIndex + 8] & 0xff) + (this.buffer[startIndex + 9] & 0xff);
+		position+=2;
 		
-		this.addressLength = (this.buffer[startIndex + 10] & 0xff) + (this.buffer[startIndex + 11] & 0xff);
+		this.TTL = (this.buffer[position] & 0xff) + (this.buffer[position+1] & 0xff) +
+				(this.buffer[position+2] & 0xff) + (this.buffer[position+3] & 0xff);
 		
-		DnsRecord record = new DnsRecord(domain, this.type, this.TTL, this.addressLength);
+		position+=4;
 		
+		this.addressLength = (this.buffer[position] & 0xff) + (this.buffer[position+1] & 0xff);
 		
+		position+=2;
+		
+		DnsRecord record = new DnsRecord(domain, this.type, this.TTL, this.addressLength, this.AA);
+		
+		record.setDomain(parseRDdata(position, record.getType(), record.getRDLength(), record));
+		
+		record.setRecordLength(position + record.getRDLength() - index);
+		
+		return record;
 //		parseRData(this.type, startIndex + 12, this.addressLength);
 	}
-
-	private void parseRData(int recordType, int index, int rdDataLength) {
-		//Type A
-		if(recordType == 1) {
-			
+	
+	private String parseRDdata(int position, int type, int rdDataLength, DnsRecord record) {
+		String result = "";
+		if(type==1) {
 			int addr [] = new int [rdDataLength];
 			for(int i = 0; i < rdDataLength; i++) {	
-				addr[i] = (this.buffer[index + i] & 0xff);
+				addr[i] = (this.buffer[position + i] & 0xff);
 				if( i< rdDataLength-1) {
-					ip = ip + addr[i] + ".";
+					result = result + addr[i] + ".";
 				}else {
-					ip = ip + addr[i];
+					result = result + addr[i];
 				}
-			}		
-		}
-		//Type CNAME
-		else if(recordType == 5) {
-			System.out.println("CNAME: " + getDomainFromIndex(index) );	
-		}
-		// Type NS
-		else if(recordType == 2) {
-			for(int i = index ; i < index + rdDataLength - 1 ; i++) {
-				char c = (char) this.buffer[i];
-				this.nameServer  = this.nameServer + c;
 			}
-			System.out.println("NS: " + this.nameServer);
+		}else if(type==2) {
+			RecordData data = getDomainFromIndex(position);
+			result = data.getDomain();
+		}else if(type==5) {
+			RecordData data = getDomainFromIndex(position);
+			result = data.getDomain();
+		}else if(type== 15) {
+			record.setPreference((this.buffer[position] & 0xff) + (this.buffer[position+1] & 0xff));
+			RecordData data = getDomainFromIndex(position+2);
+			result = data.getDomain();
 		}
-		//Type MX
-		else if(recordType == 15){
+		return result;
+	}
+	
+//	private void parseRData(int recordType, int index, int rdDataLength) {
+//		//Type A
+//		if(recordType == 1) {
+//			
+//			int addr [] = new int [rdDataLength];
+//			for(int i = 0; i < rdDataLength; i++) {	
+//				addr[i] = (this.buffer[index + i] & 0xff);
+//				if( i< rdDataLength-1) {
+//					ip = ip + addr[i] + ".";
+//				}else {
+//					ip = ip + addr[i];
+//				}
+//			}		
+//		}
+//		//Type CNAME
+//		else if(recordType == 5) {
+//			System.out.println("CNAME: " + getDomainFromIndex(index) );	
+//		}
+//		// Type NS
+//		else if(recordType == 2) {
+//			for(int i = index ; i < index + rdDataLength - 1 ; i++) {
+//				char c = (char) this.buffer[i];
+//				this.nameServer  = this.nameServer + c;
+//			}
+//			System.out.println("NS: " + this.nameServer);
+//		}
+//		//Type MX
+//		else if(recordType == 15){
 //			byte[] preference = { this.buffer[index], this.buffer[index+1]};
 //			index += 2;
 //			String mxName = "";
 //			for(int i = index; i < index + rdDataLength ; i++) {
 //				mxName = mxName + (char)this.buffer[i];
 //			}
-//			
-//			System.out.println(mxName);
-			System.out.println("mx: " + getDomainFromIndex(index) );
-		}
-	}
+//			System.out.println("mx: " + getDomainFromIndex(index) );
+//		}
+//	}
 
 	private RecordData getDomainFromIndex(int index){
     	int wordSize = buffer[index];
@@ -146,26 +197,24 @@ public class DnsResponse {
     		
     }
 	public int getRcode() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.RCODE;
 	}
 	
 	public void DisplayResponse() {
-		String auth="";
+	
 		System.out.println("**Answer Section (" + this.anCount+ " records)**");
-		if(this.AA == 0) {
-			auth ="nonauth";
-		}else {
-			auth ="auth";
+		
+		for(int i = 0 ; i < this.ansRecords.length ; i++) {
+			ansRecords[i].DisplayResponse();
 		}
-		System.out.println("IP\t"+this.ip+"\t"+this.TTL+"\t"+auth);
-		/*
-		 * CNAME <tab> [alias] <tab> [seconds can cache] <tab> [auth | nonauth]
-		 * MX <tab> [alias] <tab> [pref] <tab> [seconds can cache] <tab> [auth | nonauth]
-		 * NS <tab> [alias] <tab> [seconds can cache] <tab> [auth | nonauth]
-		 */
+		
 		System.out.println("**Additional Section ("+ this.arCount +" records)**");
 		
+		if(this.arCount > 0) {
+			for(int i = 0 ; i < this.additionalRecords.length ; i++) {
+				additionalRecords[i].DisplayResponse();
+			}
+		}
 	}
 	
 	private String getWordFromIndex(int index){
