@@ -3,6 +3,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.time.LocalTime;
 import java.util.*;
@@ -81,6 +82,7 @@ public class DnsClient {
 		}
 		try {	
 			socket = new DatagramSocket();
+			socket.setSoTimeout(this.timeout);
 			inetAddr = InetAddress.getByAddress(server);
 		} catch (SocketException e) {
 			System.out.println("ERROR\tCould not create socket");
@@ -100,51 +102,30 @@ public class DnsClient {
 		
 		
 		long sentTime = System.currentTimeMillis();
+	
 		try {
 			socket.send(sendPacket);
-			
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		try {
-			
 			socket.receive(receivePacket);
-			//System.out.print(receivePacket.);
-			//System.out.print(sendPacket.getAddress());
-			
+		} catch (SocketTimeoutException e) {	
+			System.out.println("ERROR\tSocket Timeout");
+			makeRequest(++trialNumber);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	
 		long receiveTime = System.currentTimeMillis();
 		
 		double totTime = (receiveTime-sentTime)/1000.0;
 		
-//		 for (int i = 0; i < receivePacket.getLength(); i++) {
-//	            System.out.print(" 0x" + String.format("%02x", buf[i]) + " " );
-//	        }
-//	        System.out.println("\n");
-//	        
-//	        System.out.println("The original packet has the following bytes: \n");
-//	        
-//	        for (int i = 0; i < sendPacket.getLength(); i++) {
-//	            System.out.print(" 0x" + String.format("%02x", dnsReq[i]) + " " );
-//	        }
-//		
-//		System.out.println("\n\nSent: " + sendPacket.getLength() + " bytes");
-//		
+	
 		response = new DnsResponse(buf, sendPacket.getLength());
+		
 		if(response.getRcode() != 0) {
-			makeRequest(trialNumber+1);
+			makeRequest(++trialNumber);
 		}
 		
-		System.out.println("Responce received after time: " + totTime + " seconds ("+ trialNumber + " retries)" );
-//		
-//        System.out.print("\n");
-        
+		System.out.println("Responce received after time: " + totTime + " seconds ("+ (trialNumber-1) + " retries)" );
+
         response.parseResponse();
         response.DisplayResponse();
 	}
