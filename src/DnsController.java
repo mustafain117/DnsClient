@@ -61,7 +61,7 @@ public class DnsController {
 				for(int i = 0 ; i < ipAddress.length; i++) {
 					int address = Integer.parseInt(ipAddress[i]);
 					if(address < 0 || address > 255) {
-						throw new Exception("Invalid server address, each byte has to between 0 and 255");
+						throw new Exception("Error\tInvalid server address, each byte has to between 0 and 255");
 					}
 					server[i] = (byte) address;
 				}
