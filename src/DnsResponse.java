@@ -180,7 +180,7 @@ public class DnsResponse {
 	    	if ((wordSize & 0xC0) == 0xC0) {
 	    		byte[] offset = { (byte) (buffer[index] & 0x3F), buffer[index + 1] };
 	            ByteBuffer wrapped = ByteBuffer.wrap(offset);
-	            domain.append(getDomainFromIndex(wrapped.getShort()));
+	            domain.append(getDomainFromIndex(wrapped.getShort()).getDomain());
 	            index += 2;
 	            count +=2;
 	            wordSize = 0;
