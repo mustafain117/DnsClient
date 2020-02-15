@@ -48,7 +48,7 @@ public class DnsController {
 		while(argsIterator.hasNext()) {
 			String arg = argsIterator.next();
 			if(arg.equals("-t")) {
-				this.timeout = Integer.parseInt(argsIterator.next());
+				this.timeout = Integer.parseInt(argsIterator.next()) * 1000;;
 			}else if(arg.equals("-r")) {
 				this.maxRetries = Integer.parseInt(argsIterator.next());
 			}else if(arg.equals("-p")) {
@@ -72,14 +72,14 @@ public class DnsController {
 	public void request(){
 		System.out.println("DnsClient sending request for " + domainName);
         System.out.println("Server: " + address);
-        System.out.println("Request type: " + queryType);
+        System.out.println("Request type: " + queryType + "\n");
         makeRequest(1);
 	}
 	
 	private void makeRequest(int trialNumber) {
 		if(trialNumber > maxRetries) {
-			System.out.println("ERROR\tMaximum number of retries " + maxRetries+ " exceeded");
-            return;
+			//System.out.println("ERROR\tMaximum number of retries " + maxRetries+ " exceeded");
+			throw new RuntimeException("ERROR\tMaximum number of retries " + maxRetries+ " exceeded");
 		}
 		try {	
 			socket = new DatagramSocket();
@@ -103,32 +103,34 @@ public class DnsController {
 		DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
 		
 		
-		long sentTime = System.currentTimeMillis();
 	
 		try {
+			long sentTime = System.currentTimeMillis();
 			socket.send(sendPacket);
 			socket.receive(receivePacket);
+			
+			long receiveTime = System.currentTimeMillis();
+			
+			double totalTime = (receiveTime-sentTime)/1000.0;
+			
+		
+			response = new DnsResponse(buf, sendPacket.getLength());
+			
+			if(response.getRcode() != 0) {
+				makeRequest(++trialNumber);
+			}
+			
+			response.parseResponse();
+			System.out.println("Responce received after time: " + totalTime + " seconds ("+ (trialNumber-1) + " retries)" );
+	        response.DisplayResponse();
 		} catch (SocketTimeoutException e) {	
 			System.out.println("ERROR\tSocket Timeout");
+			System.out.println("Retrying. . .");
 			makeRequest(++trialNumber);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	
-		long receiveTime = System.currentTimeMillis();
 		
-		double totalTime = (receiveTime-sentTime)/1000.0;
-		
-	
-		response = new DnsResponse(buf, sendPacket.getLength());
-		
-		if(response.getRcode() != 0) {
-			makeRequest(++trialNumber);
-		}
-		
-		System.out.println("Responce received after time: " + totalTime + " seconds ("+ (trialNumber-1) + " retries)" );
-
-        response.parseResponse();
-        response.DisplayResponse();
 	}
 }

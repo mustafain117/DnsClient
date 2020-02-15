@@ -43,6 +43,21 @@ public class DnsResponse {
 		this.AA = (this.buffer[2] & (0x04));
 				
 		this.RCODE = ((this.buffer[3]) & (0x0f));
+		
+		switch(this.RCODE) {
+		case 0: 
+			break;
+		case 1: 
+			throw new RuntimeException("Error\tFormat error: the name server was unable to interpret the query.");
+		case 2:
+			throw new RuntimeException("Error\tServer failure: the name server was unable to process this query due to a problem with the name server.");
+		case 3:
+			throw new RuntimeException("NOTFOUND");
+		case 4:
+			throw new RuntimeException("Error\tNot implemented: the name server does not support the requested kind of query.");
+		case 5:
+			throw new RuntimeException("Error\tRefused: the name server refuses to perform the requested operation for policy reasons");
+		}
 
 		this.anCount = (this.buffer[6] & 0xff) + (this.buffer[7] & 0xff);
 		
@@ -163,9 +178,8 @@ public class DnsResponse {
 			ansRecords[i].DisplayResponse();
 		}
 		
-		System.out.println("**Additional Section ("+ this.arCount +" records)**");
-		
 		if(this.arCount > 0) {
+			System.out.println("**Additional Section ("+ this.arCount +" records)**");
 			for(int i = 0 ; i < this.additionalRecords.length ; i++) {
 				additionalRecords[i].DisplayResponse();
 			}
