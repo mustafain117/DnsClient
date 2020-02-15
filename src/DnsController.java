@@ -73,12 +73,11 @@ public class DnsController {
 		System.out.println("DnsClient sending request for " + domainName);
         System.out.println("Server: " + address);
         System.out.println("Request type: " + queryType + "\n");
-        makeRequest(1);
+        makeRequest(0);
 	}
 	
 	private void makeRequest(int trialNumber) {
 		if(trialNumber > maxRetries) {
-			//System.out.println("ERROR\tMaximum number of retries " + maxRetries+ " exceeded");
 			throw new RuntimeException("ERROR\tMaximum number of retries " + maxRetries+ " exceeded");
 		}
 		try {	
@@ -125,10 +124,12 @@ public class DnsController {
 	        response.DisplayResponse();
 		} catch (SocketTimeoutException e) {	
 			System.out.println("ERROR\tSocket Timeout");
-			System.out.println("Retrying. . .");
+			if(trialNumber < maxRetries) {
+				System.out.println("Retrying. . .");
+			}
 			makeRequest(++trialNumber);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("ERROR\t"+e.getMessage());
 		}
 	
 		
