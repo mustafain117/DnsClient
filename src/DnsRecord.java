@@ -46,7 +46,7 @@ public class DnsRecord {
 		}
 		
 		if(type==1) {
-			System.out.println("IP\t"+  this.domain+  "\t" + this.TTL + "\t"+auth);
+			System.out.println("IP\t"+  this.domain + "\t" +  this.TTL + "\t"+auth);
 		}else if(type==2) {
 			System.out.println("NS\t" + this.domain + "\t" + this.TTL + "\t" + auth);
 		}else if(type==5) {

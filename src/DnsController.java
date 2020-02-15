@@ -120,7 +120,7 @@ public class DnsController {
 			}
 			
 			response.parseResponse();
-			System.out.println("Responce received after time: " + totalTime + " seconds ("+ (trialNumber-1) + " retries)" );
+			System.out.println("Responce received after time: " + totalTime + " seconds ("+ trialNumber + " retries)" );
 	        response.DisplayResponse();
 		} catch (SocketTimeoutException e) {	
 			System.out.println("ERROR\tSocket Timeout");
