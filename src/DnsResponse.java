@@ -1,25 +1,12 @@
 import java.nio.ByteBuffer;
 
 public class DnsResponse {
-	private int length;
-	private int QR;
-	private int RCODE;
-	private int responeTime;
-	private int anCount;
-	private int arCount;
+	private int length, QR, RCODE,responeTime, anCount, arCount, startIndex, type, classData, TTL, addressLength, AA, nsCount;
 	private String ip = "";
-	private String aliasName = "";
 	private byte[] buffer;
-	private int startIndex;
-	private int type ;
-	private int classData;
-	private int TTL;
-	private int addressLength;
-	private int AA;
-	private String nameServer = "";
 	private DnsRecord[] ansRecords;
 	private DnsRecord[] additionalRecords;
-	private int nsCount;
+
 
 	
 	public DnsResponse(byte[] buffer, int startIndex) {
@@ -101,7 +88,6 @@ public class DnsResponse {
 		record.setRecordLength(position + record.getRDLength() - index);
 		
 		return record;
-//		parseRData(this.type, startIndex + 12, this.addressLength);
 	}
 	
 	private String parseRDdata(int position, int type, int rdDataLength, DnsRecord record) {
@@ -129,73 +115,42 @@ public class DnsResponse {
 		}
 		return result;
 	}
-	
-//	private void parseRData(int recordType, int index, int rdDataLength) {
-//		//Type A
-//		if(recordType == 1) {
-//			
-//			int addr [] = new int [rdDataLength];
-//			for(int i = 0; i < rdDataLength; i++) {	
-//				addr[i] = (this.buffer[index + i] & 0xff);
-//				if( i< rdDataLength-1) {
-//					ip = ip + addr[i] + ".";
-//				}else {
-//					ip = ip + addr[i];
-//				}
-//			}		
-//		}
-//		//Type CNAME
-//		else if(recordType == 5) {
-//			System.out.println("CNAME: " + getDomainFromIndex(index) );	
-//		}
-//		// Type NS
-//		else if(recordType == 2) {
-//			for(int i = index ; i < index + rdDataLength - 1 ; i++) {
-//				char c = (char) this.buffer[i];
-//				this.nameServer  = this.nameServer + c;
-//			}
-//			System.out.println("NS: " + this.nameServer);
-//		}
-//		//Type MX
-//		else if(recordType == 15){
-//			byte[] preference = { this.buffer[index], this.buffer[index+1]};
-//			index += 2;
-//			String mxName = "";
-//			for(int i = index; i < index + rdDataLength ; i++) {
-//				mxName = mxName + (char)this.buffer[i];
-//			}
-//			System.out.println("mx: " + getDomainFromIndex(index) );
-//		}
-//	}
 
 	private RecordData getDomainFromIndex(int index){
-    	int wordSize = buffer[index];
-    	StringBuilder domain = new StringBuilder();
-    	boolean start = true;
-    	int count = 0;
-    	while(wordSize != 0){
+    		int wordSize = buffer[index];
+    		StringBuilder domain = new StringBuilder();
+    		boolean start = true;
+    		int count = 0;
+    		while(wordSize != 0){
 			if (!start){
 				domain.append(".");
 			}
-	    	if ((wordSize & 0xC0) == 0xC0) {
-	    		byte[] offset = { (byte) (buffer[index] & 0x3F), buffer[index + 1] };
+			if ((wordSize & 0xC0) == 0xC0) {
+	    			byte[] offset = { (byte) (buffer[index] & 0x3F), buffer[index + 1] };
 	            ByteBuffer wrapped = ByteBuffer.wrap(offset);
 	            domain.append(getDomainFromIndex(wrapped.getShort()).getDomain());
 	            index += 2;
 	            count +=2;
 	            wordSize = 0;
-	    	}else{
-	    		domain.append(getWordFromIndex(index));
-	    		index += wordSize + 1;
-	    		count += wordSize + 1;
-	    		wordSize = buffer[index];
-	    	}
-            start = false;
-            
+	    		}else{
+	    			domain.append(getWordFromIndex(index));
+	    			index += wordSize + 1;
+	    			count += wordSize + 1;
+	    			wordSize = buffer[index];
+	    		}
+			start = false;     
     	}
         return new RecordData(domain.toString(), count);
-    		
     }
+	private String getWordFromIndex(int index){
+		StringBuilder word = new StringBuilder();
+		int wordSize = buffer[index];
+		for(int i =0; i < wordSize; i++){
+    			word.append((char) buffer[index + i + 1]);
+		}
+		return word.toString();
+    }
+	
 	public int getRcode() {
 		return this.RCODE;
 	}
@@ -216,15 +171,4 @@ public class DnsResponse {
 			}
 		}
 	}
-	
-	private String getWordFromIndex(int index){
-    	StringBuilder word = new StringBuilder();
-    	int wordSize = buffer[index];
-    	for(int i =0; i < wordSize; i++){
-    		word.append((char) buffer[index + i + 1]);
-		}
-    	return word.toString();
-    }
-	
-		
 }

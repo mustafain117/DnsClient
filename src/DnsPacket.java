@@ -15,10 +15,6 @@ public class DnsPacket {
 		this.queryType = queryType;
 	}
 	
-	public DnsPacket() {
-
-	}
-	
 	public byte[] createRequestPacket() {
 		
 		//create header
@@ -101,7 +97,7 @@ public class DnsPacket {
 			for(int j = 0 ; j < tokens[i].length() ; j++) {
 				question.put((byte)tokens[i].charAt(j));
 			}
-		}		
+		}	
 		//end of Qname
 		question.put((byte)0x00);
 		
@@ -125,6 +121,5 @@ public class DnsPacket {
 		
 		return question.array();
 	}
-
 	
 }

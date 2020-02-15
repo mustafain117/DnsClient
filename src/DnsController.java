@@ -98,6 +98,7 @@ public class DnsController {
 		byte[] dnsReq = dnsQuery.createRequestPacket();
 		DatagramPacket sendPacket = new DatagramPacket(dnsReq, dnsReq.length, inetAddr, this.port);
 		
+		//buffer used for datagram packet received
 		byte[] buf = new byte[1024];
 		DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
 		
@@ -116,7 +117,7 @@ public class DnsController {
 	
 		long receiveTime = System.currentTimeMillis();
 		
-		double totTime = (receiveTime-sentTime)/1000.0;
+		double totalTime = (receiveTime-sentTime)/1000.0;
 		
 	
 		response = new DnsResponse(buf, sendPacket.getLength());
@@ -125,7 +126,7 @@ public class DnsController {
 			makeRequest(++trialNumber);
 		}
 		
-		System.out.println("Responce received after time: " + totTime + " seconds ("+ (trialNumber-1) + " retries)" );
+		System.out.println("Responce received after time: " + totalTime + " seconds ("+ (trialNumber-1) + " retries)" );
 
         response.parseResponse();
         response.DisplayResponse();
