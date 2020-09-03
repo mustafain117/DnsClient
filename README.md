@@ -1,8 +1,6 @@
 # DnsClient
 DNS client using Java Sockets.
-```
-code
-```
+
 
 ## Usage: 
 Clone the repository, compile using:  
